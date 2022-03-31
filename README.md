@@ -1,1 +1,1 @@
-# react-speedometer
+# speedometer
