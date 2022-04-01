@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Speedometer", "Speedometer\Speedometer.csproj", "{6DC0C2A2-DF40-4C00-B31F-2E374C940EFF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6DC0C2A2-DF40-4C00-B31F-2E374C940EFF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6DC0C2A2-DF40-4C00-B31F-2E374C940EFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6DC0C2A2-DF40-4C00-B31F-2E374C940EFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6DC0C2A2-DF40-4C00-B31F-2E374C940EFF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
