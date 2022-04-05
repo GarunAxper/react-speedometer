@@ -1,11 +1,18 @@
 import * as d3 from "d3";
 import { useEffect, useRef, useState } from "react";
+import Gear from "./Gear";
 const ENDPOINT = "ws://localhost:12345/Velocity";
+
+interface Telemetry {
+    Velocity: number
+    Gear: number
+    Rpm: number
+}
 
 export default function Speedometer() {
     const ref = useRef(null);
-    const [velocity, setVelocity] = useState(0);
-    let total = 400;
+    const [telemetry, setTelemetry] = useState<Telemetry>({ Velocity: 0, Gear: 0, Rpm: 0 });
+    const maxSpeed = 350;
 
     const width = 500,
         height = 580,
@@ -14,7 +21,7 @@ export default function Speedometer() {
     useEffect(() => {
         const webSocket = new WebSocket(ENDPOINT);
         webSocket.onmessage = function (event) {
-            setVelocity(event.data);
+            setTelemetry(JSON.parse(event.data));
         }
         webSocket.onopen = function (event) {
             webSocket.send("init")
@@ -22,6 +29,14 @@ export default function Speedometer() {
     }, []);
 
     useEffect(() => {
+        if (!telemetry) return;
+
+        const color = ["#1C73FF", "#CED3DC"];
+        const anglesRange = Math.PI / 1.7
+        const data = [telemetry.Velocity, maxSpeed - telemetry.Velocity];
+        const outerRadius = 210;
+        const innerRadius = 180;
+
         d3.select(ref.current)
             .select("g")
             .attr("data-ver", "old");
@@ -34,67 +49,92 @@ export default function Speedometer() {
             .append("g")
             .attr("transform", `translate(${width / 2}, ${height / 2})`);
 
-        var radius = Math.min(width, height) / 2 - margin
-
-        // Create dummy data
-        const data = { a: velocity, b: total - velocity }
-
-        // set the color scale
-        const color = ["red", "#8a89a6"];
-        var anglesRange = Math.PI / 1.7
 
         const pie = d3.pie()
-            .value(d => (d as any)[1])
             .sort(null)
             .startAngle(-1 * anglesRange)
             .endAngle(anglesRange);
 
-        const data_ready = pie(Object.entries(data) as any)
+        const arc = d3.arc()
+            .padAngle(.02)
+            .cornerRadius(4)
+            .innerRadius(innerRadius)
+            .outerRadius(outerRadius) as any;
 
         svg
-            .selectAll('whatever')
-            .data(data_ready)
+            .selectAll()
+            .data(pie(data))
             .enter()
             .append('path')
-            .attr('d', d3.arc()
-                .innerRadius(180)         // This is the size of the donut hole
-                .outerRadius(radius) as any
-            )
-            .attr('fill', (d, i) => color[i])
+            .attr('d', arc)
+            .attr('fill', (d, i) => i === 0 && parseInt(d.data as any) > 250 ? "#f80000" : color[i])
             .attr("stroke", "black")
             .style("stroke-width", "2px")
             .style("opacity", 0.7)
 
+        const arcWithoutPadAngle = arc.padAngle(0);
+
+        svg
+            .selectAll()
+            .data(pie([50, 50, 50, 50, 50, 50, 50]))
+            .enter()
+            .append('path')
+            .attr('d', arcWithoutPadAngle)
+            .attr('fill', "transparent")
+            .attr("stroke", "black")
+            .style("stroke-width", "2px")
+            .style("opacity", 0.7)
+
+        const arc3 = d3.arc()
+            .innerRadius(innerRadius + 40)
+            .outerRadius(outerRadius + 30) as any;
+
+
+        const pie2 = d3.pie()
+            .sort(null)
+            .startAngle(-1 * anglesRange - 0.3)
+            .endAngle(anglesRange + 0.3);
+
+        svg
+            .selectAll('mySlices')
+            .data(pie2([50, 50, 50, 50, 50, 50, 50, 50]))
+            .join('text')
+            .text((_d, i) => (i * 50).toString())
+            .attr("transform", (d) => `translate(${arc3.centroid(d)})`)
+            .style("text-anchor", "middle")
+            .style("font-size", height / 30)
+
         svg
             .append("text")
             .attr("text-anchor", "middle")
+            .attr("y", "30")
             .style("font-size", height / 20)
-            .text(velocity + " kph");
+            .text(telemetry.Velocity + " kph");
+
+        svg
+            .append("text")
+            .attr("y", "-90")
+            .attr("text-anchor", "middle")
+            .style("font-size", height / 20)
+            .text(telemetry.Gear);
+
+        svg
+            .selectAll('circle')
+            .data(new Array(10))
+            .join('circle')
+            .attr('cx', (d, i) => i * 25 - 115)
+            .attr('cy', -60)
+            .attr('r', 7)
+            .style('fill', (d, i) => i < telemetry.Rpm ? (telemetry.Rpm > 7 ? "#f80000" : "#1d8a3a") : "gray");
 
         d3
             .select(ref.current).selectAll("g[data-ver='old']").remove();
-    }, [velocity]);
-
-
-    // useEffect(() => {
-    //     const id = setInterval(() => {
-    //         setVelocity((prev) => {
-
-    //             let accelerate = Math.random() < 0.5;
-
-    //             if ((accelerate && prev + 2 <= total) || prev - 10 < 0) return prev + 2;
-
-    //             return prev - 2;
-    //         })
-    //     }, 10)
-    //     return () => {
-    //         clearInterval(id)
-    //     }
-    // }, [total])
+    }, [telemetry]);
 
     return (
-        <>
-            <svg ref={ref}></svg>
-        </>
+        <div>
+            <svg ref={ref}>
+            </svg>
+        </div>
     )
 }
