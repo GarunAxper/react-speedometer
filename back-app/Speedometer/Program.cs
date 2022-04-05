@@ -1,5 +1,4 @@
-﻿using System;
-using Speedometer;
+﻿using Speedometer;
 using WebSocketSharp.Server;
 
 const string socketUrl = "ws://localhost:12345";
